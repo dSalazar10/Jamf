@@ -5,6 +5,8 @@ Created on Thu Jul 19 17:19:59 2018
 @author: vu7972
 Inspired by sreyemnayr JSSAPI:
 https://github.com/sreyemnayr/jamf_pro_api/blob/master/jssapi/jssapi.py
+CoProducer jpsthecelt:
+https://github.com/jpsthecelt/configNquery/blob/master/rdConfigNqueryBF.py
 """
 import requests
 import sys
