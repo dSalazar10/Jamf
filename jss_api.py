@@ -14,10 +14,7 @@ import json
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 class JSSAPI:
-    def __init__(self,
-                 url='',
-                 head={"Accept": "application/json"},
-                 user='', pwd=''):
+    def __init__(self, url='', head={"Accept": "application/json"}, user='', pwd=''):
         requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
         self.url = url + '/JSSResource/'
         self.head = head
@@ -41,8 +38,7 @@ class JSSAPI:
         try:
             with open(cfg_file) as data_file:
                 data = json.load(data_file)
-                self.auth = requests.auth.HTTPBasicAuth(data["credentials"]["username"],
-                                                        data["credentials"]["password"])
+                self.auth = requests.auth.HTTPBasicAuth(data["credentials"]["username"], data["credentials"]["password"])
         except:
             self.e = sys.exc_info[0]
     
