@@ -18,8 +18,6 @@ class API(Enum):
     SN = 3
     # BigFix: BigFix REST API
     BF = 4
-    # Testing functions using Oxford Dictionary
-    OX = 5
 
 # Input:
 #   1) api is an Enum of API
@@ -31,8 +29,7 @@ def getConfigData(api):
     config = ['JSScredentials.json',
               'ODcredentials.json',
               'SNcredentials.json',
-              'BFcredentials.json',
-              'credentials.json'
+              'BFcredentials.json'
              ]
     try:
         with open(config[api.value]) as data_file:
