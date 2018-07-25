@@ -92,28 +92,28 @@ def getResponse(api, method):
     return get(cfg_data["credentials"]["url"], auth, method)
 
 
+# replicate "pyNrNotebook1.ipynb" functionality in python
 def queryBFviaRelevance(rVance):
        return (getResponse(API(4), '/api/query?relevance=' + rVance)).text
 
-def computersLf1(x):
-    pd.DataFrame([i.cdata for i in xmltodict.parse(x).BESAPI.Query.Result.Answer])
-    
 def computersLf2(x):
     pd.DataFrame([i.cdata.split(">") for i in xmltodict.parse(x).BESAPI.Query.Result.Answer])
     
 def parseBF():
-    # pass 2
+    # get Endpoint Name and Last Checkin Time
     r = "(name of it %26 %22>%22 %26 (last report time of it) as string) of bes\
         computers whose (name of it as lowercase contains %22adhay%22)"
     df = computersLf2(queryBFviaRelevance(r))
-    # pass 3
+    # get Initial Install Date
     r = "(name of it %26 %22%3e%22 %26 last report time of it as string %26 %22\
         %3e%22 %26 (value of results (it, bes property %22InitialInstallDate%22)\
         as string)) of bes computers whose (name of it as lowercase contains\
         %22adhay%22 and exists value of it of results (it, bes property\
         %22InitialInstallDate%22))"
-    df.join(computersLf2(r))
+    df["Initial Install Date"] = computersLf2(r)
+    # calculate the number of days since install
     df["Lifetime"] = df["Last Checkin Time"].apply(lambda x: datetime.strptime(x,\
       '%a, %d %b %Y %H:%M:%S %z')) - df["Initial Install Date"].apply(lambda x:\
         datetime.strptime(x, '%a, %d %b %Y %H:%M:%S %z')) 
     df.columns = ["Endpoint Name","Last Checkin Time", "Initial Install Date", "Lifetime"]
+    return df
