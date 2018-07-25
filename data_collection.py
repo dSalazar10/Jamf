@@ -5,6 +5,10 @@ Created on Thu Jul 23 17:19:59 2018
 """
 import requests
 import sys
+import json
+import pandas as pd
+import xmltodict
+from datetime import datetime
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -41,12 +45,14 @@ def getConfigData(api):
 #   cfg_data is the list which contains the URL, 
 # Process:
 #   This will loop through each of the cfg_data in order of the Enum.
-#   It will extract the username and password from the cfg_data and use that to request authentication.
+#   It will extract the username and password from the cfg_data and use that to
+#    request authentication.
 # Output:
 #   auth is a list of authentications
 def getAuth(cfg_data):
     try:
-        return requests.auth.HTTPBasicAuth(cfg_data["credentials"]["username"],cfg_data["credentials"]["password"])
+        return requests.auth.HTTPBasicAuth(cfg_data["credentials"]["username"],
+                                           cfg_data["credentials"]["password"])
     except:
         sys.exc_info()[0]
 
@@ -72,7 +78,8 @@ def get(url,auth,method='mobiledevices',head={"Accept": "application/json"}):
         
 # Input:
 #   1) api is one of the API Enums
-#   2) method is what goes after the url, example: '/computerapplicationusage/id/%s/%s_%s'
+#   2) method is what goes after the url,
+#      example: '/computerapplicationusage/id/%s/%s_%s'
 # Process
 #   This gets the configuration data
 #   Then it authorizes using the username and password
@@ -83,3 +90,30 @@ def getResponse(api, method):
     cfg_data = getConfigData(api)
     auth = getAuth(cfg_data)
     return get(cfg_data["credentials"]["url"], auth, method)
+
+
+def queryBFviaRelevance(rVance):
+       return (getResponse(API(4), '/api/query?relevance=' + rVance)).text
+
+def computersLf1(x):
+    pd.DataFrame([i.cdata for i in xmltodict.parse(x).BESAPI.Query.Result.Answer])
+    
+def computersLf2(x):
+    pd.DataFrame([i.cdata.split(">") for i in xmltodict.parse(x).BESAPI.Query.Result.Answer])
+    
+def parseBF():
+    # pass 2
+    r = "(name of it %26 %22>%22 %26 (last report time of it) as string) of bes\
+        computers whose (name of it as lowercase contains %22adhay%22)"
+    df = computersLf2(queryBFviaRelevance(r))
+    # pass 3
+    r = "(name of it %26 %22%3e%22 %26 last report time of it as string %26 %22\
+        %3e%22 %26 (value of results (it, bes property %22InitialInstallDate%22)\
+        as string)) of bes computers whose (name of it as lowercase contains\
+        %22adhay%22 and exists value of it of results (it, bes property\
+        %22InitialInstallDate%22))"
+    df.join(computersLf2(r))
+    df["Lifetime"] = df["Last Checkin Time"].apply(lambda x: datetime.strptime(x,\
+      '%a, %d %b %Y %H:%M:%S %z')) - df["Initial Install Date"].apply(lambda x:\
+        datetime.strptime(x, '%a, %d %b %Y %H:%M:%S %z')) 
+    df.columns = ["Endpoint Name","Last Checkin Time", "Initial Install Date", "Lifetime"]
